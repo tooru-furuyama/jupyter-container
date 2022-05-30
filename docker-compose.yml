@@ -20,8 +20,8 @@ services:
       - "./shared/passwd:/etc/passwd:ro"
       - "./shared/group:/etc/group:ro"
       - "./shared/shadow:/etc/shadow:ro"
-      - "./shared/certs/cert.pem:/etc/ssl/private/cert.pem:ro"
-      - "./shared/certs/key.pem:/etc/ssl/private/key.pem:ro"
+      #- "./shared/certs/cert.pem:/etc/ssl/private/cert.pem:ro"
+      #- "./shared/certs/key.pem:/etc/ssl/private/key.pem:ro"
       - "./shared/workspace:/root/workspace"
       - "./shared/users:/home"
     ports:
