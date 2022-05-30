@@ -1,0 +1,13 @@
+[Unit]
+Description=Jupyterhub
+After=syslog.target network.target
+
+[Service]
+User=root
+Restart=always
+Environment="PATH=/usr/local/bin"
+WorkingDirectory=/root/workspace
+ExecStart=/usr/local/bin/jupyterhub -f /usr/local/etc/jupyter/jupyter_hub_config.d/jupyterhub_config.py --port 8000 --ip 0.0.0.0
+
+[Install]
+WantedBy=multi-user.target

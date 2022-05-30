@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: dockerfile
+    container_name: "jupyter"
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - DOCKER_JUPYTER_IMAGE=apps_jupyter
+      - DOCKER_NETWORK_NAME=apps_default
+      - HUB_IP=jupyter
+      - JUPYTERHUB_SINGLEUSER_APP=jupyter_server.serverapp.ServerApp
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./jupyter:/usr/local/etc/jupyter"
+      #- "./jupyter/jupyter_hub_config.d/ldap.conf:/etc/ldap/ldap.conf"
+      - "./shared/passwd:/etc/passwd:ro"
+      - "./shared/group:/etc/group:ro"
+      - "./shared/shadow:/etc/shadow:ro"
+      - "./shared/certs/cert.pem:/etc/ssl/private/cert.pem:ro"
+      - "./shared/certs/key.pem:/etc/ssl/private/key.pem:ro"
+      - "./shared/workspace:/root/workspace"
+      - "./shared/users:/home"
+    ports:
+      - '8000:8000'
+      - '8888:8888'
+
