@@ -7,7 +7,7 @@ User=user
 Group=user
 PIDFile=/run/jupyter.pid
 WorkingDirectory=/root/workspace
-ExecStart=/user/local/bin/jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/root/workspace --config=/usr/local/etc/jupyter/jupyter_notebook_config.d/jupyter_notebook_config.py
+ExecStart=/usr/local/bin/jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/root/workspace --config=/usr/local/etc/jupyter/jupyter_notebook_config.d/jupyter_notebook_config.py
 
 [Install]
 WantedBy=multi-user.target
