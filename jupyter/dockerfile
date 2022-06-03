@@ -1,7 +1,10 @@
 FROM python:slim-bullseye
+USER root
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN mkdir /opt/jupyter
 RUN python3 -m venv /opt/jupyter
+ENV PATH="/opt/jupyter/bin:$PATH:/usr/local/bin"
 
 RUN apt-get update && apt-get install --no-install-recommends --yes apt-utils
 RUN apt-get install --no-install-recommends --yes git nodejs npm tzdata
@@ -29,19 +32,14 @@ RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
     dockerspawner \
     jupyterhub-ldapauthenticator
 
-RUN mkdir -p /opt/jupyter/etc/jupyter/jupyter_hub_config.d
-RUN cd /opt/jupyter/etc/jupyter/jupyter_hub_config.d
-RUN /opt/jupyter/bin/jupyterhub --generate-config
-
-RUN echo "PATH=\$PATH:/usr/local/bin:/opt/jupyter/bin">>/etc/profile
-RUN echo "export PATH">>/etc/profile
-
 RUN groupadd -g 1000 jupyter && useradd -m -s /bin/bash -d /home/jupyter -u 1000 -g 1000 jupyter
-RUN echo -e "jupyter\njupyter" | passwd jupyter
+RUN echo "jupyter:jupyter" | chpasswd
+
+RUN cd /home/jupyter
+RUN /opt/jupyter/bin/jupyterhub --generate-config
 
 WORKDIR /home/jupyter/
 
 EXPOSE 8000
 
 CMD ["/opt/jupyter/bin/jupyterhub"]
-
