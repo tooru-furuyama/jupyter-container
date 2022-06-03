@@ -1,15 +1,19 @@
-FROM debian:bullseye-slim
-USER root
-ENV DEBIAN_FRONTEND noninteractive
+FROM python:slim-bullseye
 
-RUN apt-get update && apt-get install --no-install-recommends --yes git python3 python3-pip nodejs npm tzdata
+RUN mkdir /opt/jupyter
+RUN python3 -m venv /opt/jupyter
+
+RUN apt-get update && apt-get install --no-install-recommends --yes apt-utils
+RUN apt-get install --no-install-recommends --yes git nodejs npm tzdata
 RUN apt-get clean && apt-get autoclean && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --no-cache-dir --upgrade pip setuptools
 
+RUN npm init -y && npm install -g configurable-http-proxy && rm -rf ~/.npm
 RUN ln -s /usr/bin/node /usr/local/bin/node
 
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir --upgrade pip setuptools
+
 ## JupyterLab ##
-RUN pip3 install --no-cache-dir \
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
     jupyterlab \
     jupyterlab_code_formatter \
     jupyterlab-git \
@@ -20,29 +24,24 @@ RUN pip3 install --no-cache-dir \
     import-ipynb
 
 ## JupyterHub ##
-RUN pip3 install --no-cache-dir \
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
     jupyterhub \
     dockerspawner \
     jupyterhub-ldapauthenticator
 
-RUN npm init -y && npm install -g configurable-http-proxy && rm -rf ~/.npm
+RUN mkdir -p /opt/jupyter/etc/jupyter/jupyter_hub_config.d
+RUN cd /opt/jupyter/etc/jupyter/jupyter_hub_config.d
+RUN /opt/jupyter/bin/jupyterhub --generate-config
 
-RUN mkdir -p /usr/local/etc/jupyter/jupyter_hub_config.d
-COPY jupyter_hub_config.d /usr/local/etc/jupyter
-COPY jupyter_notebook_config.d /usr/local/etc/jupyter
-COPY jupyter_server_config.d /usr/local/etc/jupyter
-COPY nbconfig /usr/local/etc/jupyter
-
-RUN echo "PATH=\$PATH:/usr/local/bin:/usr/local/sbin">>/etc/profile
+RUN echo "PATH=\$PATH:/usr/local/bin:/opt/jupyter/bin">>/etc/profile
 RUN echo "export PATH">>/etc/profile
 
-RUN groupadd -g 1000 jupyter && useradd -m -s /bin/bash -u 1000 -g 1000 jupyter
+RUN groupadd -g 1000 jupyter && useradd -m -s /bin/bash -d /home/jupyter -u 1000 -g 1000 jupyter
 RUN echo -e "jupyter\njupyter" | passwd jupyter
 
-RUN mkdir -p /srv/jupyter/
-WORKDIR /srv/jupyter/
+WORKDIR /home/jupyter/
 
 EXPOSE 8000
 
-CMD ["jupyterhub"]
+CMD ["/opt/jupyter/bin/jupyterhub"]
 
