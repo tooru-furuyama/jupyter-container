@@ -5,16 +5,16 @@ services:
     build:
       context: ./jupyter
       dockerfile: dockerfile
-    container_name: "jupyter"
+    container_name: "jupyter-dev"
     privileged: true
     restart: unless-stopped
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./jupyter:/opt/jupyter/etc"
-      - "./shared/etc/passwd:/etc/passwd:ro"
-      - "./shared/etc/group:/etc/group:ro"
-      - "./shared/etc/shadow:/etc/shadow:ro"
-      - "./shared/users:/home"
+      - "./jupyter:/opt/jupyter/etc/jupyter"
+      #- "./shared/etc/passwd:/etc/passwd"
+      #- "./shared/etc/shadow:/etc/shadow"
+      #- "./shared/etc/group:/etc/group"
+      - "./shared/home:/home"
     ports:
       - '8000:8000'
 
