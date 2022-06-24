@@ -1,0 +1,67 @@
+FROM python:slim-bullseye
+USER root
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN mkdir /opt/jupyter
+RUN python3 -m venv /opt/jupyter
+ENV PATH="/opt/jupyter/bin:$PATH:/usr/local/bin"
+
+RUN apt-get update && apt-get install --no-install-recommends --yes apt-utils
+RUN apt-get install --no-install-recommends --yes git nodejs npm tzdata
+
+## PowerShell ##
+# RUN apt-get install --no-install-recommends --yes wget apt-transport-https software-properties-common
+# RUN wget -q "https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb"
+# RUN dpkg -i packages-microsoft-prod.deb
+# RUN rm packages-microsoft-prod.deb
+RUN apt-get install --no-install-recommends --yes curl gnupg apt-transport-https
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-debian-bullseye-prod bullseye main" > /etc/apt/sources.list.d/microsoft.list
+RUN apt-get install --no-install-recommends --yes powershell
+
+RUN apt-get clean && apt-get autoclean && rm -rf /var/lib/apt/lists/*
+
+RUN npm init -y && npm install -g configurable-http-proxy && rm -rf ~/.npm
+RUN ln -s /usr/bin/node /usr/local/bin/node
+
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir --upgrade pip setuptools
+
+## JupyterLab ##
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
+    jupyterlab \
+    jupyterlab_code_formatter \
+    jupyterlab-git \
+    lckr-jupyterlab-variableinspector \
+    jupyterlab_widgets \
+    ipywidgets \
+    black \
+    import-ipynb
+
+## Bash Kernel ##
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
+    bash_kernel
+RUN /opt/jupyter/bin/python3 -m bash_kernel.install
+
+## PowerShell Kernel ##
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
+    powershell_kernel
+RUN /opt/jupyter/bin/python3 -m powershell_kernel.install --powershell-command pwsh
+
+## JupyterHub ##
+RUN /opt/jupyter/bin/pip3 install --no-cache-dir \
+    jupyterhub \
+    dockerspawner \
+    jupyterhub-ldapauthenticator
+
+RUN groupadd -g 1000 jupyter && useradd -m -s /bin/bash -d /home/jupyter -u 1000 -g 1000 jupyter
+RUN echo "jupyter:jupyter" | chpasswd
+
+RUN cd /home/jupyter
+RUN /opt/jupyter/bin/jupyterhub --generate-config
+
+WORKDIR /home/jupyter/
+# RUN git config --global http.sslVerify "false"
+
+EXPOSE 8000
+
+CMD ["/opt/jupyter/bin/jupyterhub","-f","jupyterhub_config.py"]
